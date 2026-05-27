@@ -72,7 +72,7 @@ router.post("/register", async (req, res) => {
     }
     if (err.message?.includes("JWT_SECRET")) {
       return res.status(503).json({
-        error: "Server nicht konfiguriert (JWT_SECRET fehlt auf Netlify).",
+        error: "Server nicht konfiguriert (JWT_SECRET fehlt).",
       });
     }
     console.error("[auth/register]", err.message);

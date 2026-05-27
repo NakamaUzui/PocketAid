@@ -9,3 +9,6 @@ data/users/
 
 # Local Netlify folder
 .netlify
+
+.vercel
+.env*

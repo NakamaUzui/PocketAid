@@ -31,7 +31,10 @@ function verifyUserToken(token) {
 function setAuthCookie(res, token) {
   const secure =
     process.env.URL?.startsWith("https") ||
-    process.env.ENABLE_BANKING_REDIRECT_URL?.startsWith("https");
+    process.env.ENABLE_BANKING_REDIRECT_URL?.startsWith("https") ||
+    process.env.APP_BASE_URL?.startsWith("https") ||
+    Boolean(process.env.VERCEL_URL) ||
+    Boolean(process.env.VERCEL);
   res.setHeader(
     "Set-Cookie",
     `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE_SEC}${

@@ -45,6 +45,15 @@ function getRedirectUrl() {
   if (process.env.ENABLE_BANKING_REDIRECT_URL) {
     return process.env.ENABLE_BANKING_REDIRECT_URL;
   }
+  if (process.env.APP_BASE_URL) {
+    return `${process.env.APP_BASE_URL.replace(/\/$/, "")}/api/banking/callback`;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}/api/banking/callback`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}/api/banking/callback`;
+  }
   if (process.env.URL) {
     return `${process.env.URL.replace(/\/$/, "")}/api/banking/callback`;
   }

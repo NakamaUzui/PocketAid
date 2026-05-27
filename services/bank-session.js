@@ -64,7 +64,10 @@ async function persistBankSession(res, session, userId) {
     }
     const secure =
       process.env.URL?.startsWith("https") ||
-      process.env.ENABLE_BANKING_REDIRECT_URL?.startsWith("https");
+      process.env.ENABLE_BANKING_REDIRECT_URL?.startsWith("https") ||
+      process.env.APP_BASE_URL?.startsWith("https") ||
+      Boolean(process.env.VERCEL_URL) ||
+      Boolean(process.env.VERCEL);
     res.setHeader(
       "Set-Cookie",
       `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE_SEC}${

@@ -16,10 +16,11 @@ function createApp() {
   app.get("/api/health", (_req, res) => {
     const status = getStatus();
     const onNetlify = Boolean(process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME);
+    const onVercel = Boolean(process.env.VERCEL || process.env.VERCEL_URL);
     res.json({
       ok: true,
       ...status,
-      host: onNetlify ? "netlify" : "node",
+      host: onVercel ? "vercel" : onNetlify ? "netlify" : "node",
       storage: isSupabaseConfigured() ? "supabase" : "legacy",
     });
   });
