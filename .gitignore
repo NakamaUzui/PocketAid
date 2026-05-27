@@ -1,0 +1,11 @@
+node_modules/
+.env
+.DS_Store
+keys/*.pem
+data/bank-session.json
+data/transactions.json
+data/auth/
+data/users/
+
+# Local Netlify folder
+.netlify

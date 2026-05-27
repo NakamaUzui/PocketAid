@@ -1,0 +1,9 @@
+.env
+.env.*
+keys/
+data/
+node_modules/
+.git
+README.md
+DEPLOY-NETLIFY.md
+assets/reference.png

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>PocketAid</title>
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("pocketaid-theme");
+        if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+  <div class="page">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="screen">
+        <div class="screen-bg"></div>
+
+        <header class="header">
+          <div class="header-left">
+            <div class="brand-mark" aria-hidden="true">
+              <svg class="brand-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="7" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity="0.22"/>
+                <path d="M3 11h18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                <path d="M7 7V6a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                <circle cx="17" cy="14.5" r="1.25" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="header-text">
+              <h1 class="app-title">PocketAid</h1>
+              <p class="app-subtitle" data-app-subtitle>Finanzübersicht</p>
+            </div>
+          </div>
+          <button class="bell-btn" type="button" aria-label="Benachrichtigungen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 3a5 5 0 0 0-5 5v3.5L5 14.5h14l-2-3V8a5 5 0 0 0-5-5z"/>
+              <path d="M10 17.5a2 2 0 0 0 4 0"/>
+            </svg>
+            <span class="bell-dot"></span>
+          </button>
+        </header>
+
+        <div class="notif-panel glass" aria-hidden="true">
+          <p class="notif-title">Benachrichtigungen</p>
+          <ul class="notif-list">
+            <li>Bank verbunden – Transaktionen synchronisiert</li>
+            <li>KI-Assistent bereit</li>
+            <li>Monatsübersicht aktualisiert</li>
+          </ul>
+        </div>
+
+        <main class="content">
+          <!-- Dashboard -->
+          <div class="view view--active" data-view="dashboard">
+            <section class="balance-card">
+              <p class="balance-label">Ausgaben · letzte 90 Tage</p>
+              <p class="balance-amount total-amount">0,00 €</p>
+              <p class="balance-meta" data-balance-meta>Verbinde deine Bank unter „Mehr“</p>
+            </section>
+
+            <section class="card categories-card glass">
+              <h3 class="section-label">Kategorien</h3>
+              <ul class="category-bars" data-category-bars></ul>
+            </section>
+
+            <section class="card assistant-card glass">
+              <div class="assistant-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <div class="assistant-card__body">
+                <p class="assistant-card__title">Finanz-Assistent</p>
+                <p class="assistant-card__text">Fragen zu Ausgaben, Kategorien & Spartipps.</p>
+              </div>
+              <button type="button" class="btn btn--primary btn--sm" data-go-chat>Chat</button>
+            </section>
+
+            <div>
+              <h3 class="section-label">Letzte Umsätze</h3>
+              <section class="transactions" data-dashboard-tx></section>
+            </div>
+          </div>
+
+          <!-- Transaktionsliste -->
+          <div class="view" data-view="transactions">
+            <h2 class="view-title">Umsätze</h2>
+            <div class="tx-list-full" data-tx-list-full></div>
+          </div>
+
+          <!-- Chat -->
+          <div class="view" data-view="chat">
+            <div class="chat-view-header">
+              <h2 class="view-title">Assistent</h2>
+              <span class="ai-status ai-status--offline" data-ai-status>Verbinde…</span>
+            </div>
+            <section class="card chat-card glass chat-card--full">
+              <div class="chat-messages" data-chat-feed></div>
+              <div class="chat-input-row">
+                <input type="text" class="chat-input" data-chat-input placeholder="Frag den Finanz-Assistenten…" autocomplete="off" />
+                <button type="button" class="btn btn--primary btn--send" data-chat-send>Senden</button>
+              </div>
+            </section>
+          </div>
+
+          <!-- Mehr -->
+          <div class="view" data-view="more">
+            <h2 class="view-title">Einstellungen</h2>
+
+            <section class="bank-panel glass" data-bank-panel>
+              <p class="bank-panel__title">Bank & Sync</p>
+              <p class="bank-panel__status" data-bank-status>Lade Status…</p>
+
+              <div class="bank-connected-badge" data-bank-connected-badge hidden>
+                <span class="bank-connected-dot" aria-hidden="true"></span>
+                <span data-bank-connected-label>Bank verbunden</span>
+              </div>
+
+              <div class="bank-setup" data-bank-setup>
+                <label class="bank-label" for="bank-select">Bank (Österreich)</label>
+                <select id="bank-select" class="bank-select" data-bank-select disabled>
+                  <option value="">— Bank wählen —</option>
+                </select>
+                <button type="button" class="btn btn--primary btn--block" data-bank-connect disabled>
+                  Bank verbinden
+                </button>
+              </div>
+
+              <div class="bank-actions">
+                <button type="button" class="btn btn--ghost btn--block" data-bank-sync disabled hidden>
+                  Jetzt aktualisieren
+                </button>
+                <button type="button" class="btn btn--ghost btn--block btn--danger" data-bank-disconnect disabled>
+                  Verbindung trennen
+                </button>
+              </div>
+              <p class="bank-hint" data-bank-hint>
+                Verbinde deine Bank einmal – Umsätze werden danach automatisch aktualisiert.
+              </p>
+            </section>
+
+            <section class="settings-card glass">
+              <h3 class="section-label">Darstellung</h3>
+              <div class="settings-row">
+                <div class="settings-row__text">
+                  <p class="settings-row__title">Dunkelmodus</p>
+                  <p class="settings-row__desc">Schont die Augen bei wenig Licht</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" data-theme-toggle aria-label="Dunkelmodus" />
+                  <span class="toggle__track"></span>
+                </label>
+              </div>
+            </section>
+
+            <div class="more-menu glass">
+              <button type="button" class="more-item more-item--danger" data-logout>Abmelden</button>
+              <a class="more-item more-item--link" href="/privacy.html">Datenschutz</a>
+              <a class="more-item more-item--link" href="/terms.html">Nutzungsbedingungen</a>
+              <button type="button" class="more-item" data-more-action="Export – demnächst">Export (demnächst)</button>
+            </div>
+          </div>
+        </main>
+
+        <nav class="bottom-nav glass-nav">
+          <button type="button" class="nav-item nav-item--active" data-nav="dashboard">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="8" height="8" rx="1.5"/>
+              <rect x="13" y="3" width="8" height="8" rx="1.5"/>
+              <rect x="3" y="13" width="8" height="8" rx="1.5"/>
+              <rect x="13" y="13" width="8" height="8" rx="1.5"/>
+            </svg>
+            <span>Übersicht</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="transactions">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+            <span>Umsätze</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>Assistent</span>
+          </button>
+          <button type="button" class="nav-item" data-nav="more">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+            </svg>
+            <span>Einstellungen</span>
+          </button>
+        </nav>
+
+        <div class="home-indicator"></div>
+
+        <div class="modal" aria-hidden="true">
+          <div class="modal-sheet glass">
+            <button type="button" class="modal-close" aria-label="Schließen">×</button>
+            <h3 class="modal-title"></h3>
+            <div class="modal-body"></div>
+          </div>
+        </div>
+
+        <div class="toast" role="status" aria-live="polite"></div>
+
+        <div class="flow-overlay" data-flow-overlay hidden aria-live="polite" aria-busy="true">
+          <div class="flow-overlay__panel">
+            <div class="flow-overlay__icon" data-flow-icon></div>
+            <p class="flow-overlay__title" data-flow-title></p>
+            <p class="flow-overlay__sub" data-flow-sub></p>
+            <button type="button" class="btn btn--primary flow-overlay__btn" data-flow-action hidden>Weiter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js?v=13"></script>
+</body>
+</html>

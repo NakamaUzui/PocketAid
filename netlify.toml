@@ -1,0 +1,33 @@
+[build]
+  command = "npm install"
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions.api]
+  timeout = 26
+
+# API → Serverless (Express)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Login / Register (eigene Seiten)
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/register"
+  to = "/register.html"
+  status = 200
+
+# SPA: alle anderen Pfade → App
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
