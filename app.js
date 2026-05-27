@@ -304,7 +304,10 @@
       const n = data.count ?? transactions.length;
       const bankN = data.fetched ?? data.raw ?? n;
       const pages = data.pages ? ` · ${data.pages} API-Seite(n)` : "";
-      showToast(`${n} Transaktionen (${bankN} von Bank)${pages}`);
+      const chunks = data.accountStats?.some((a) => a.usedDateChunks)
+        ? " · Monats-Chunks"
+        : "";
+      showToast(`${n} Transaktionen (${bankN} von Bank)${pages}${chunks}`);
     }
 
     return data.count || 0;

@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const { ebFetchWithMeta } = require("./client");
 
 const MAX_PAGES_PER_ACCOUNT = 500;
+const MAX_DATE_CHUNKS = 48;
+const BANK_PAGE_CAP_HINT = 50;
 
 function getAccountUid(account) {
   if (!account) return null;
@@ -49,8 +51,44 @@ function getFetchStrategyMode() {
 
 function getHistoryDays() {
   const parsed = Number(process.env.BANKING_HISTORY_DAYS);
-  if (!Number.isFinite(parsed) || parsed <= 0) return 3650;
+  if (!Number.isFinite(parsed) || parsed <= 0) return 365;
   return Math.floor(parsed);
+}
+
+function getChunkDays() {
+  const parsed = Number(process.env.BANKING_CHUNK_DAYS);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 30;
+  return Math.floor(parsed);
+}
+
+function parseIsoDate(iso) {
+  return new Date(`${iso}T00:00:00.000Z`);
+}
+
+function formatIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function buildDateChunks(dateFrom, dateTo, chunkDays) {
+  const chunks = [];
+  let start = parseIsoDate(dateFrom);
+  const end = parseIsoDate(dateTo);
+
+  while (start <= end && chunks.length < MAX_DATE_CHUNKS) {
+    const chunkEnd = new Date(start);
+    chunkEnd.setUTCDate(chunkEnd.getUTCDate() + chunkDays - 1);
+    if (chunkEnd > end) chunkEnd.setTime(end.getTime());
+
+    chunks.push({
+      dateFrom: formatIsoDate(start),
+      dateTo: formatIsoDate(chunkEnd),
+    });
+
+    start = new Date(chunkEnd);
+    start.setUTCDate(start.getUTCDate() + 1);
+  }
+
+  return chunks;
 }
 
 function rawTxKey(tx) {
@@ -65,8 +103,16 @@ function mergeTransactions(into, list) {
   for (const tx of list) into.set(rawTxKey(tx), tx);
 }
 
+function looksLikeHardCap(result) {
+  return (
+    result.transactions.length >= BANK_PAGE_CAP_HINT &&
+    result.pages === 1 &&
+    !result.lastHadContinuation
+  );
+}
+
 /**
- * Holt alle Transaktionsseiten für ein Konto (Enable-Banking-Pagination).
+ * Ein Zeitraum + Strategie inkl. continuation_key-Pagination.
  */
 async function fetchAccountTransactionsWithStrategy(accountId, options = {}) {
   const { dateFrom, dateTo, strategy = "default" } = options;
@@ -105,7 +151,17 @@ async function fetchAccountTransactionsWithStrategy(accountId, options = {}) {
     strategy,
     lastHadContinuation,
     lastBatchSize,
+    dateFrom,
+    dateTo,
   };
+}
+
+async function runStrategyForRange(accountId, options, strategy) {
+  const result = await fetchAccountTransactionsWithStrategy(accountId, {
+    ...options,
+    strategy,
+  });
+  return result;
 }
 
 async function fetchAccountTransactions(accountId, options = {}) {
@@ -113,39 +169,65 @@ async function fetchAccountTransactions(accountId, options = {}) {
   const merged = new Map();
   const strategyStats = [];
   let apiPages = 0;
+  let chunkStats = null;
 
-  const runStrategy = async (strategy) => {
-    const result = await fetchAccountTransactionsWithStrategy(accountId, {
-      ...options,
-      strategy,
-    });
+  const absorb = (result, label) => {
     const before = merged.size;
     mergeTransactions(merged, result.transactions);
     apiPages += result.pages;
     strategyStats.push({
-      strategy,
+      label,
+      strategy: result.strategy,
       pages: result.pages,
       count: result.transactions.length,
       newUnique: merged.size - before,
       lastHadContinuation: result.lastHadContinuation,
       lastBatchSize: result.lastBatchSize,
+      dateFrom: result.dateFrom,
+      dateTo: result.dateTo,
     });
     return result;
   };
 
-  if (mode === "longest") {
-    await runStrategy("longest");
-  } else if (mode === "both") {
-    await runStrategy("default");
-    await runStrategy("longest");
-  } else {
-    await runStrategy("default");
+  const defaultResult = absorb(
+    await runStrategyForRange(accountId, options, "default"),
+    "full-range"
+  );
+
+  if (mode === "longest" || mode === "both") {
+    absorb(await runStrategyForRange(accountId, options, "longest"), "longest");
+  }
+
+  const needsChunking = looksLikeHardCap(defaultResult);
+
+  if (needsChunking) {
+    chunkStats = [];
+    merged.clear();
+    strategyStats.length = 0;
+    apiPages = 0;
+
+    const chunks = buildDateChunks(options.dateFrom, options.dateTo, getChunkDays());
+    for (const chunk of chunks) {
+      const result = await runStrategyForRange(accountId, chunk, "default");
+      const before = merged.size;
+      mergeTransactions(merged, result.transactions);
+      apiPages += result.pages;
+      chunkStats.push({
+        from: chunk.dateFrom,
+        to: chunk.dateTo,
+        count: result.transactions.length,
+        newUnique: merged.size - before,
+        pages: result.pages,
+      });
+    }
   }
 
   return {
     transactions: [...merged.values()],
     pages: apiPages,
     strategyStats,
+    chunkStats,
+    usedDateChunks: Boolean(chunkStats?.length),
   };
 }
 
@@ -187,6 +269,8 @@ async function fetchAllSessionTransactions(session) {
       accountId,
       count: result.transactions.length,
       pages: result.pages,
+      usedDateChunks: result.usedDateChunks,
+      chunkStats: result.chunkStats,
       strategies: result.strategyStats,
     });
   }
@@ -197,6 +281,8 @@ async function fetchAllSessionTransactions(session) {
     pages: totalPages,
     dateFrom,
     dateTo,
+    historyDays: getHistoryDays(),
+    chunkDays: getChunkDays(),
     strategyMode: getFetchStrategyMode(),
     accountStats,
   };

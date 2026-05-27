@@ -65,7 +65,7 @@ router.get("/status", async (req, res) => {
     lastSync: await getLastSyncedAt(req.user?.id),
     country: getBankCountry(),
     environment: getEnvironment(),
-    syncEngine: "v4-single-strategy-pagination",
+    syncEngine: "v5-date-chunks",
   });
 });
 
@@ -201,7 +201,7 @@ router.post("/sync", async (req, res) => {
       pages: fetched.pages,
       accounts: fetched.accounts,
       accountStats: fetched.accountStats,
-      syncEngine: "v4-single-strategy-pagination",
+      syncEngine: "v5-date-chunks",
     });
   } catch (err) {
     console.error("[banking/sync]", err.message);
