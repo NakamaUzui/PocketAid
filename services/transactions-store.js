@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { isSupabaseConfigured } = require("./db/client");
 const dbTx = require("./db/transactions");
+const { sortTransactionsNewestFirst } = require("./transactions-sort");
 
 const DEFAULT_TRANSACTIONS = [
   {
@@ -56,7 +57,7 @@ function getTransactionsLegacy(userId) {
   if (list.length === 0 && !userId) {
     return DEFAULT_TRANSACTIONS;
   }
-  return list;
+  return sortTransactionsNewestFirst(list);
 }
 
 function saveTransactionsLegacy(transactions, userId) {

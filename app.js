@@ -321,22 +321,36 @@
     aiStatus.classList.toggle("ai-status--offline", !ready);
   }
 
+  function sortTxByDate(list) {
+    return [...list].sort((a, b) => {
+      const key = (tx) => {
+        if (tx.dateSort) return tx.dateSort;
+        const p = String(tx.date || "").split(".");
+        if (p.length !== 3) return "";
+        return `${p[2]}-${p[1]}-${p[0]}`;
+      };
+      const cmp = key(b).localeCompare(key(a));
+      if (cmp !== 0) return cmp;
+      return String(b.id || "").localeCompare(String(a.id || ""));
+    });
+  }
+
   async function loadTransactions() {
     try {
       const res = await apiFetch(`${API}/banking/transactions`);
       const data = await res.json();
-      const list = data.transactions || [];
+      const list = sortTxByDate(data.transactions || []);
       if (list.length) {
         transactions = list.map(txToUi);
         cacheTransactions(list);
       } else {
-        const cached = loadCachedTransactions();
+        const cached = sortTxByDate(loadCachedTransactions() || []);
         if (cached?.length) transactions = cached.map(txToUi);
       }
       renderAllTransactions();
       updateTotal();
     } catch (e) {
-      const cached = loadCachedTransactions();
+      const cached = sortTxByDate(loadCachedTransactions() || []);
       if (cached?.length) {
         transactions = cached.map(txToUi);
         renderAllTransactions();

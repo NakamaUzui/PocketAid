@@ -8,6 +8,7 @@ const {
   ebFetch,
 } = require("../services/enable-banking/client");
 const { normalizeAll } = require("../services/enable-banking/mapper");
+const { sortTransactionsNewestFirst } = require("../services/transactions-sort");
 const { fetchAllSessionTransactions } = require("../services/enable-banking/fetch-transactions");
 const {
   getTransactions,
@@ -177,12 +178,7 @@ router.post("/sync", async (req, res) => {
     }
 
     const fetched = await fetchAllSessionTransactions(session);
-    const normalized = normalizeAll(fetched.transactions);
-    normalized.sort((a, b) => {
-      const da = a.date.split(".").reverse().join("");
-      const db = b.date.split(".").reverse().join("");
-      return db.localeCompare(da);
-    });
+    const normalized = sortTransactionsNewestFirst(normalizeAll(fetched.transactions));
 
     await saveTransactions(normalized, req.user.id);
     const dbCount = await countTransactions(req.user.id);

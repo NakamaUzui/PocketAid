@@ -32,11 +32,13 @@ function normalizeTransaction(tx, index = 0) {
   const signedAmount = isExpense ? -Math.abs(rawAmount) : Math.abs(rawAmount);
   const merchant = getMerchantName(tx);
   const { category, icon } = categorizeTransaction(tx, merchant);
+  const dateSort = tx.booking_date || tx.value_date || "";
 
   return {
     id: stableTransactionId(tx, index),
     merchant,
-    date: formatGermanDate(tx.booking_date || tx.value_date),
+    date: formatGermanDate(dateSort),
+    dateSort,
     amount: signedAmount,
     amountDisplay: formatEuro(signedAmount),
     category,

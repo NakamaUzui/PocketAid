@@ -1,21 +1,28 @@
 const { getSupabase } = require("./client");
+const { sortTransactionsNewestFirst } = require("../transactions-sort");
 
 function rowToTransaction(row) {
+  const raw = row.raw && typeof row.raw === "object" ? row.raw : null;
   return {
     id: row.id,
     merchant: row.merchant,
     date: row.date,
+    dateSort: raw?.dateSort || null,
     amount: row.amount != null ? Number(row.amount) : 0,
     amountDisplay: row.amount_display,
     category: row.category,
     icon: row.icon,
     source: row.source,
     mcc: row.mcc,
-    ...(row.raw ? { raw: row.raw } : {}),
+    ...(raw ? { raw } : {}),
   };
 }
 
 function transactionToRow(t, userId, syncedAt) {
+  const raw =
+    t.dateSort || t.raw
+      ? { ...(t.raw && typeof t.raw === "object" ? t.raw : {}), ...(t.dateSort ? { dateSort: t.dateSort } : {}) }
+      : null;
   return {
     id: String(t.id),
     user_id: userId,
@@ -27,7 +34,7 @@ function transactionToRow(t, userId, syncedAt) {
     icon: t.icon || null,
     source: t.source || null,
     mcc: t.mcc || null,
-    raw: t.raw || null,
+    raw,
     synced_at: syncedAt,
   };
 }
@@ -57,7 +64,6 @@ async function getTransactions(userId) {
       .from("transactions")
       .select("*", { count: "exact" })
       .eq("user_id", userId)
-      .order("synced_at", { ascending: false })
       .order("id", { ascending: true })
       .range(from, to);
 
@@ -72,7 +78,7 @@ async function getTransactions(userId) {
     if (data.length < pageSize) break;
   }
 
-  return rows.map(rowToTransaction);
+  return sortTransactionsNewestFirst(rows.map(rowToTransaction));
 }
 
 async function saveTransactions(transactions, userId) {
